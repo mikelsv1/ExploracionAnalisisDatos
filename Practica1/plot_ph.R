@@ -24,7 +24,7 @@ ggplot() +
               se = FALSE, color = "grey70", size = 0.5) +
   
   geom_smooth(data = ph_overall_means, aes(x = as.numeric(Month), y = OverallMean),
-              se = FALSE, color = "red", size = 1, linetype = "solid") +
+              se = TRUE, color = "red", size = 1, linetype = "solid") +
   
   annotate("text", x = 12, y = 8.21, label = "Media", 
            color = "red", vjust = -0.5, hjust = 1, size = 5) +
@@ -43,4 +43,8 @@ ggplot() +
     plot.title = element_text(hjust = 0.5, face = "bold")
   ) +
   scale_x_continuous(breaks = seq(1, 12, 1), labels = month_labels)
+
+# El área sombreada alrededor de la línea de la media (el CI) muestra el rango 
+# donde es probable que se encuentre la media verdadera del pH en cada mes, 
+# basado en la variabilidad de los datos.
 
