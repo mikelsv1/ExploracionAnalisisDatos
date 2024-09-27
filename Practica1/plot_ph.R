@@ -97,3 +97,4 @@ ggplot() +
 # de la media muestra el intervalo de confianza (IC) en el que se 
 # estima que se encuentre la verdadera media poblacional con un 95% 
 # de certeza
+
