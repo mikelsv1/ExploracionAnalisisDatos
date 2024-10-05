@@ -1,7 +1,7 @@
 library(kernlab)
-load("objetos.RData")
-n = 211
-n_nuevos <- 28
+load("/home/mikel/Escritorio/KISA/analisisDatos/repo/ExploracionAnalisisDatos/Practica2/objetos.RData")
+n <- 211
+m <- 28
 
 # APARTADO 1
 mds <- cmdscale(d, eig=TRUE)
@@ -30,7 +30,7 @@ x <- 0.5*solve(eig_matrix)%*%t(mds$points[,1:2])%*%(b-t(dnuevos)**2)
 # Representarlos en el espacio
 x <- t(x) # poner las coordenadas como columnas de la matriz
 plot(x, type="n") 
-text(x[,1], x[,2], 1:n_nuevos)
+text(x[,1], x[,2], 1:m)
 
 
 
@@ -48,10 +48,19 @@ kpca_eigens/sum(kpca_eigens)*100
 # En este caso si cogemos las q=2 primeras componentes tendríamos que aportan un porcentaje de variabilidad de:
 (kpca_eigens[1] + kpca_eigens[2])/sum(kpca_eigens)*100
 
-# Calcular la matriz de centrado de las nuevas variables respecto a las originales
-K_nuevos_centrado <- dnuevos - rowMeans(dnuevos) # centrado de filas respecto a la observación actual
-K_nuevos_centrado <- K_nuevos_centrado - colMeans(d)
+# Calcular la matriz de doble centrado de las nuevas variables respecto a las originales
+k_nuevos <- kernelMatrix(rbfdot(sigma=sigma), dnuevos, d)
+media_global_nuevos <- mean(k_nuevos)
+media_filas_nuevos <- rowMeans(k_nuevos)
+media_columnas_nuevos <- colMeans(k_nuevos)
+
+K_nuevos_centrado <- matrix(0, nrow=m, ncol=n)
+for (i in 1:m) {
+  for (j in 1:n) {
+    K_nuevos_centrado[i, j] <- k_nuevos[i, j] - media_filas_nuevos[i] - media_columnas_nuevos[j] + media_global_nuevos
+  }
+}
 
 x <- K_nuevos_centrado%*%pcv(kernelpca)[,1:2]
 plot(x, type="n") 
-text(x[,1], x[,2], 1:n_nuevos)
+text(x[,1], x[,2], 1:m)
