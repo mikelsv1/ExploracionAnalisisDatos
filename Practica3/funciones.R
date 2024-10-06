@@ -1,22 +1,40 @@
-plot_dendogramas <- function(d){
-  metodos <- c("single", "complete", "average", "ward.D2")
-  titulos <- c("Dendrograma - Mínimo (Single)",
-               "Dendrograma - Máximo (Complete)",
-               "Dendrograma - Média de grupos (Average)",
-               "Dendrograma - Ward.D2")
+plot_dendogramas <- function(metodo, d){
+  mean_shil = c()
   
-  par(mfrow = c(2, 2)) # Pongo gráfica 2x2
+  hc <- hclust(d, metodo)
   
-  for (i in 1:length(metodos)) {
-    hc <- hclust(d, method = metodos[i])
-    plot(hc, main = titulos[i], hang = -0.1, sub = "", xlab = "Ciudades", ylab = "Distancia")
+  ggdendro_data <- dendro_data(hc)
+  
+  plot1 <- ggplot() +
+    geom_segment(data = ggdendro_data$segments, aes(x = x, y = y, xend = xend, yend = yend)) +
+    geom_text(data = ggdendro_data$labels, aes(x = x, y = 0, label = label), angle = 90, hjust = 1, vjust = 0.5) +
+    labs(title = "Dendograma", x = "Ciudades", y = "Distancia") +
+    theme_minimal() +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+  
+  for (k in 2:10) {
+    clusters <- cutree(hc, k)
+    sil <- silhouette(clusters, d)
+    mean_shil <- append(mean_shil, mean(sil[, 3]))
   }
   
-  par(mfrow = c(1, 1)) # Restauro gráfica a 1x1
+  plot2 <- ggplot(data = data.frame(k = 2:10, mean_shil = mean_shil), aes(x = k, y = mean_shil)) +
+    geom_line() +
+    geom_point() +
+    labs(x = "Número de Clusters", y = "Silhouette promedio", 
+         title = "Valor silhouette promedio por clusters") +
+    scale_x_continuous(breaks = 2:10)
+  
+  best_model <- cutree(hc, which.max(mean_shil) + 1)
+  sil <- silhouette(best_model, d)
+  
+  plot3 <- fviz_silhouette(sil) + 
+    ggtitle("Silueta de los clusters")
+  
+  grid.arrange(plot1, plot2, plot3, ncol = 2)
+  
+  return(best_model)
 }
-
-
-
 
 
 plot_shillouetes <- function(metodo, X, d) {
@@ -44,19 +62,22 @@ plot_shillouetes <- function(metodo, X, d) {
          title = "Valor silhouette promedio por clusters") +
     scale_x_continuous(breaks = 2:10)
   
+  best_model <- NULL
+  
   if (identical(metodo, "specc")) {
-    sil <- silhouette(specc(X, centers = which.max(mean_shil) + 1)@.Data, d)
+    best_model <- specc(X, centers = which.max(mean_shil) + 1)
+    sil <- silhouette(best_model@.Data, d)
   } else if (identical(metodo, "pam")) {
-    sil <- silhouette(pam(X, which.max(mean_shil) + 1)$cluster, d)
+    best_model <- pam(X, which.max(mean_shil) + 1)
+    sil <- silhouette(best_model$cluster, d)
   } else {
-    sil <- silhouette(kmeans(X, centers = which.max(mean_shil) + 1)$cluster, d)
+    best_model <- kmeans(X, centers = which.max(mean_shil) + 1)
+    sil <- silhouette(best_model$cluster, d)
   }
   plot2 <- fviz_silhouette(sil) + 
     ggtitle("Silueta de los clusters")
   
   grid.arrange(plot1, plot2, ncol = 2) # Usar grid.arrange para mostrar ambos gráficos
   
-  par(mfrow = c(1, 1)) # Restauro gráfica a 1x1
+  return(best_model)
 }
-
-

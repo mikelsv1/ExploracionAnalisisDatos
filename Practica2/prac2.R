@@ -29,8 +29,40 @@ x <- 0.5*solve(eig_matrix)%*%t(mds$points[,1:2])%*%(b-t(dnuevos)**2)
 
 # Representarlos en el espacio
 x <- t(x) # poner las coordenadas como columnas de la matriz
-plot(x, type="n") 
+
+plot(x[,1], x[,2], type="n", 
+     xlim = range(c(x[,1], mds$points[,1])), 
+     ylim = range(c(x[,2], mds$points[,2])))
 text(x[,1], x[,2], 1:m)
+points(mds$points[,1:2], pch=16, col = rainbow(length(unique(clase)), alpha = 0.5)[as.factor(clase)])
+legend("topright", legend = unique(clase), col = rainbow(length(unique(clase)), alpha = 0.5), pch = 16, cex=0.5)
+
+# MEDIDAS DE BONDAD
+# Mediad global
+plot(cor(dnuevos,x))
+# Medida local
+K <- 5
+porcentajes <- numeric(nrow(dnuevos))
+dist_original <- as.matrix(dist(dnuevos))
+dist_proyeccion <- as.matrix(dist(x))
+
+for (i in 1:nrow(dnuevos)) {
+  vecinos_original_total <- dist_original[i, ]
+  vecinos_original_total[i] <- NA  # Ponemos NA para no considerar la distancia a sí mismo
+  vecinos_original <- order(vecinos_original_total)[1:K]
+  
+  vecinos_proyeccion_total <- dist_proyeccion[i, ]
+  vecinos_proyeccion_total[i] <- NA  # Ponemos NA para no considerar la distancia a sí mismo
+  vecinos_proyeccion <- order(vecinos_proyeccion_total)[1:K]
+  
+  # Comparar los vecinos y contar las coincidencias
+  vecinos_comunes <- length(intersect(vecinos_original, vecinos_proyeccion))
+  
+  # Calcular el porcentaje de coincidencias
+  porcentajes[i] <- (vecinos_comunes / K) * 100
+}
+barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
+        xlab = "Variables", ylab = "Porcentaje (%)")
 
 
 
@@ -62,5 +94,39 @@ for (i in 1:m) {
 }
 
 x <- K_nuevos_centrado%*%pcv(kernelpca)[,1:2]
-plot(x, type="n") 
+
+
+plot(x[,1], x[,2], type="n", 
+     xlim = range(c(x[,1], kernelpca@rotated[,1])), 
+     ylim = range(c(x[,2], kernelpca@rotated[,2])))
 text(x[,1], x[,2], 1:m)
+points(kernelpca@rotated[,1:2], pch=16, col = rainbow(length(unique(clase)), alpha = 0.5)[as.factor(clase)])
+legend("topright", legend = unique(clase), col = rainbow(length(unique(clase)), alpha = 0.5), pch = 16, cex=0.5)
+
+# MEDIDAS DE BONDAD
+# Mediad global
+plot(cor(dnuevos,x))
+# Medida local
+K <- 5
+porcentajes <- numeric(nrow(dnuevos))
+dist_original <- as.matrix(dist(dnuevos))
+dist_proyeccion <- as.matrix(dist(x))
+
+for (i in 1:nrow(dnuevos)) {
+  vecinos_original_total <- dist_original[i, ]
+  vecinos_original_total[i] <- NA  # Ponemos NA para no considerar la distancia a sí mismo
+  vecinos_original <- order(vecinos_original_total)[1:K]
+  
+  vecinos_proyeccion_total <- dist_proyeccion[i, ]
+  vecinos_proyeccion_total[i] <- NA  # Ponemos NA para no considerar la distancia a sí mismo
+  vecinos_proyeccion <- order(vecinos_proyeccion_total)[1:K]
+  
+  # Comparar los vecinos y contar las coincidencias
+  vecinos_comunes <- length(intersect(vecinos_original, vecinos_proyeccion))
+  
+  # Calcular el porcentaje de coincidencias
+  porcentajes[i] <- (vecinos_comunes / K) * 100
+}
+barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
+        xlab = "Variables", ylab = "Porcentaje (%)")
+
