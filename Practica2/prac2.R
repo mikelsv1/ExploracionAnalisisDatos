@@ -1,13 +1,13 @@
-library(kernlab)
+
 load("/home/mikel/Escritorio/KISA/analisisDatos/repo/ExploracionAnalisisDatos/Practica2/objetos.RData")
 n <- 211
 m <- 28
 
 # APARTADO 1
 mds <- cmdscale(d, eig=TRUE)
-plot(mds$eig, type="b")
+plot(mds$eig, type="b", ylab="Valores propios", xlab="Componente")
 # Nos quedamos con las primeras 10 para entrender mejor el análisis
-plot(mds$eig[1:10], type="b")
+plot(mds$eig[1:10], type="b", ylab="Valores propios", xlab="Componente")
 abline(h=0, col="black", lty = 2)
 mds$eig[1:10]/sum(mds$eig[1:10])*100 # porcentaje de variabilidad que aporta cada componente
 
@@ -62,7 +62,7 @@ for (i in 1:nrow(dnuevos)) {
   porcentajes[i] <- (vecinos_comunes / K) * 100
 }
 barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
-        xlab = "Variables", ylab = "Porcentaje (%)")
+        xlab = "Nuevos individuos", ylab = "Porcentaje (%)", col="#4a8cc7")
 
 
 
@@ -70,9 +70,15 @@ barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
 # Construcción de la matriz de kernel Gaussiano para sigma=0.2
 sigma <- 0.2
 K <- exp(-d^2 / (2 * sigma^2))
+H <- diag(n) - matrix(1, n, n) / n
+K_centered <- H %*% K %*% H
+eig <- eigen(K_centered)
+kpca_eigens <- eig$values
+kpca_vectors <- eig$vectors
+kernel_comps <- K_centered %*% kpca_vectors
 
-kernelpca <- kpca(~., data = as.data.frame(K), kernel = "rbfdot", kpar = list(sigma = sigma))
-kpca_eigens <- eig(kernelpca)
+# kernelpca <- kpca(~., data = as.data.frame(K), kernel = "rbfdot", kpar = list(sigma = sigma))
+# kpca_eigens <- eig(kernelpca)
 plot(kpca_eigens, type="b")
 abline(h=0, col="black", lty = 2)
 kpca_eigens/sum(kpca_eigens)*100
@@ -81,7 +87,7 @@ kpca_eigens/sum(kpca_eigens)*100
 (kpca_eigens[1] + kpca_eigens[2])/sum(kpca_eigens)*100
 
 # Calcular la matriz de doble centrado de las nuevas variables respecto a las originales
-k_nuevos <- kernelMatrix(rbfdot(sigma=sigma), dnuevos, d)
+k_nuevos <- exp(-dnuevos^2 / (2 * sigma^2))
 media_global_nuevos <- mean(k_nuevos)
 media_filas_nuevos <- rowMeans(k_nuevos)
 media_columnas_nuevos <- colMeans(k_nuevos)
@@ -93,14 +99,14 @@ for (i in 1:m) {
   }
 }
 
-x <- K_nuevos_centrado%*%pcv(kernelpca)[,1:2]
-
+dat_orig_proyectados <- K_centered %*% kpca_vectors
+x <- K_nuevos_centrado%*%kpca_vectors[,1:2]
 
 plot(x[,1], x[,2], type="n", 
-     xlim = range(c(x[,1], kernelpca@rotated[,1])), 
-     ylim = range(c(x[,2], kernelpca@rotated[,2])))
+     xlim = range(c(x[,1], dat_orig_proyectados[,1])), 
+     ylim = range(c(x[,2], dat_orig_proyectados[,2])))
 text(x[,1], x[,2], 1:m)
-points(kernelpca@rotated[,1:2], pch=16, col = rainbow(length(unique(clase)), alpha = 0.5)[as.factor(clase)])
+points(dat_orig_proyectados[,1:2], pch=16, col = rainbow(length(unique(clase)), alpha = 0.5)[as.factor(clase)])
 legend("topright", legend = unique(clase), col = rainbow(length(unique(clase)), alpha = 0.5), pch = 16, cex=0.5)
 
 # MEDIDAS DE BONDAD
@@ -128,5 +134,4 @@ for (i in 1:nrow(dnuevos)) {
   porcentajes[i] <- (vecinos_comunes / K) * 100
 }
 barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
-        xlab = "Variables", ylab = "Porcentaje (%)")
-
+        xlab = "Variables", ylab = "Porcentaje (%)", col="#4a8cc7")
