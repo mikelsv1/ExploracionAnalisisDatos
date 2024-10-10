@@ -64,7 +64,7 @@ for (i in 1:nrow(dnuevos)) {
 barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
         xlab = "Nuevos individuos", ylab = "Porcentaje (%)", col="#4a8cc7")
 abline(h=mean(porcentajes), col="red", lty=2)
-
+text(x=3, y=90, "Mean", col="red")
 
 
 # APARTADO 2
@@ -137,3 +137,4 @@ for (i in 1:nrow(dnuevos)) {
 barplot(porcentajes, names.arg = 1:length(porcentajes), cex.names=0.8,
         xlab = "Variables", ylab = "Porcentaje (%)", col="#4a8cc7")
 abline(h=mean(porcentajes), col="red", lty=2)
+text(x=10, y=90, "Mean", col="red")
